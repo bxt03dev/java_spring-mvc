@@ -5,8 +5,13 @@ import com.example.demo.service.UploadService;
 import com.example.demo.service.UserService;
 
 import jakarta.servlet.ServletContext;
+import jakarta.validation.Valid;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,11 +26,12 @@ public class UserController{
 
     private final UserService userService;
     private final UploadService uploadService;
+    private final PasswordEncoder passwordEncoder;
 
-
-   public UserController(UserService userService, UploadService uploadService) {
+   public UserController(UserService userService, UploadService uploadService, PasswordEncoder passwordEncoder) {
        this.userService = userService;
        this.uploadService = uploadService;
+       this.passwordEncoder = passwordEncoder;
    }
 
    @RequestMapping("/")
@@ -43,6 +49,7 @@ public class UserController{
        model.addAttribute("users1", users);
        return "admin/user/show";
    }
+
    @GetMapping("/admin/user/create")
    public String getResgisterPage(Model model){ //Model là 1 interface trong MVC để truyền dữ liệu giữa Controller và View
        model.addAttribute("newUser", new User());
@@ -51,12 +58,29 @@ public class UserController{
 
    @PostMapping(value = "/admin/user/create")
     public String createUserPage(Model model,
-                                 @ModelAttribute("newUser") User bxt,
-                                 @RequestParam("bxtFile") MultipartFile file){
+                                 @ModelAttribute("newUser") @Valid User bxt,
+                                 BindingResult newUserBindingResult,
+                                 @RequestParam("bxtFile") MultipartFile file
+                                 ){
 
-       String avatar = this.uploadService.handleSaveUploadFile(file, "avatar");
+        List<FieldError> errors = newUserBindingResult.getFieldErrors();
+        for(FieldError error : errors){
+            System.out.println(error.getField() + " " + error.getDefaultMessage());
+        }
 
-       return "redirect:/admin/user";
+        if(newUserBindingResult.hasErrors()){
+            return "admin/user/create";
+        }
+
+        String avatar = this.uploadService.handleSaveUploadFile(file, "avatar");
+        String hashPassword = this.passwordEncoder.encode(bxt.getPassword());
+
+        bxt.setAvatar(avatar);
+        bxt.setPassword(hashPassword);
+        bxt.setRole(this.userService.getRoleByName(bxt.getRole().getName()));
+        this.userService.handleSaveUser(bxt);
+
+        return "redirect:/admin/user";
    }
 
     @RequestMapping("/admin/user/{id}")

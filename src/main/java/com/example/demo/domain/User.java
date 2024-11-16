@@ -1,12 +1,60 @@
 package com.example.demo.domain;
 
+import com.example.demo.service.validator.StrongPassword;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
+
+import java.util.List;
+
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @NotNull
+    @Email(message = "Email is not valid", regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
+    @NotEmpty(message = "Email cannot be empty")
     private String email;
+
+    @NotNull
+    @Size(min = 2, message = "mật khẩu không hợp lệ")
+    @StrongPassword
     private String password;
+
+    @NotNull
+    @Size(min = 2, message = "Tên không hợp lệ")
     private String fullName;
+
     private String address;
     private String phone;
+    private String avatar;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+
+    @OneToMany(mappedBy = "user")
+    private List<Order> orders;
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
 
     public long getId() {
         return id;
@@ -56,6 +104,14 @@ public class User {
         this.phone = phone;
     }
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -65,6 +121,7 @@ public class User {
                 ", fullName='" + fullName + '\'' +
                 ", address='" + address + '\'' +
                 ", phone='" + phone + '\'' +
+                ", avatar='" + avatar + '\'' +
                 '}';
     }
 }
