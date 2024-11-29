@@ -5,6 +5,8 @@ import com.example.demo.domain.User;
 import com.example.demo.domain.dto.RegisterDTO;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -34,9 +36,10 @@ public class HomePageController {
     }
 
     @GetMapping("/")
-    public String getMethodName(Model model){
+    public String getMethodName(Model model, HttpServletRequest request){
         List<Product> products = this.productService.getAllProduct();
         model.addAttribute("products", products);
+        HttpSession session = request.getSession(false);
         return "client/homepage/show";
     }
 
@@ -68,5 +71,10 @@ public class HomePageController {
     public String getLoginPage(Model model){
 
         return "client/auth/login";
+    }
+
+    @GetMapping("/access-deny")
+    public String getAccessDeniedPage(Model model){
+        return "client/auth/deny";
     }
 }

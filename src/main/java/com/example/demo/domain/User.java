@@ -21,7 +21,7 @@ public class User {
 
     @NotNull
     @Size(min = 2, message = "mật khẩu không hợp lệ")
-    @StrongPassword
+    //@StrongPassword
     private String password;
 
     @NotNull
@@ -39,6 +39,9 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders;
+
+    @OneToOne(mappedBy = "user")
+    private Cart cart;
 
     public Role getRole() {
         return role;
